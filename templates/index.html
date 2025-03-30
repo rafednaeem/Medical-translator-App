@@ -1,0 +1,484 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Medical Translator</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        /* Modern, professional styling */
+        :root {
+            --primary-color: #2A7DE1;
+            --secondary-color: #F5F7FA;
+            --accent-color: #4CAF50;
+            --error-color: #ff6b6b;
+            --text-color: #333;
+            --light-text: #fff;
+            --border-radius: 8px;
+            --box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        }
+        
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--secondary-color);
+            color: var(--text-color);
+            line-height: 1.6;
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 0 20px;
+        }
+        
+        .container {
+            background: white;
+            border-radius: var(--border-radius);
+            box-shadow: var(--box-shadow);
+            width: 100%;
+            max-width: 600px;
+            overflow: hidden;
+        }
+        
+        .app-header {
+            background: var(--primary-color);
+            color: var(--light-text);
+            padding: 20px 25px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        
+        .app-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+        }
+        
+        .app-icon {
+            font-size: 1.8rem;
+        }
+        
+        .language-selection {
+            padding: 20px 25px;
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: space-between;
+            gap: 15px;
+            background: #f9f9f9;
+            border-bottom: 1px solid #eee;
+        }
+        
+        .language-group {
+            flex: 1;
+            min-width: 150px;
+        }
+        
+        .language-label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 500;
+            font-size: 0.9rem;
+            color: #555;
+        }
+        
+        select {
+            width: 100%;
+            padding: 10px 15px;
+            border-radius: var(--border-radius);
+            border: 1px solid #ddd;
+            background-color: white;
+            font-size: 0.9rem;
+            appearance: none;
+            background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23333' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");
+            background-repeat: no-repeat;
+            background-position: right 10px center;
+            background-size: 16px;
+        }
+        
+        .transcript-container {
+            padding: 20px 25px;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+        
+        .transcript-box {
+            border: 1px solid #ddd;
+            border-radius: var(--border-radius);
+            padding: 15px;
+            min-height: 100px;
+            max-height: 150px;
+            overflow-y: auto;
+            background-color: white;
+            transition: all 0.3s ease;
+            position: relative;
+        }
+        
+        .transcript-box h3 {
+            margin-bottom: 10px;
+            font-size: 0.9rem;
+            color: #555;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .transcript-text {
+            font-size: 1rem;
+            line-height: 1.5;
+        }
+        
+        .actions {
+            padding: 20px 25px;
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+        }
+        
+        button {
+            padding: 12px 25px;
+            border: none;
+            border-radius: var(--border-radius);
+            background-color: var(--primary-color);
+            color: white;
+            font-weight: 500;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            transition: all 0.2s;
+        }
+        
+        button:hover {
+            opacity: 0.9;
+            transform: translateY(-2px);
+        }
+        
+        button.record {
+            background-color: var(--accent-color);
+        }
+        
+        button.stop {
+            background-color: var(--error-color);
+        }
+        
+        button.speak {
+            background-color: #6200ea;
+        }
+        
+        button:disabled {
+            background-color: #ccc;
+            cursor: not-allowed;
+            transform: none;
+        }
+        
+        .status-container {
+            padding: 10px 25px;
+            text-align: center;
+        }
+        
+        .status-message {
+            font-size: 0.9rem;
+            color: #555;
+        }
+        
+        .spinner {
+            border: 3px solid rgba(0, 0, 0, 0.1);
+            border-radius: 50%;
+            border-top: 3px solid var(--primary-color);
+            width: 20px;
+            height: 20px;
+            margin: 0 auto 10px;
+            animation: spin 1s linear infinite;
+            display: none;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        .copy-btn {
+            background: none;
+            border: none;
+            color: #777;
+            padding: 0;
+            font-size: 0.9rem;
+            cursor: pointer;
+        }
+        
+        .copy-btn:hover {
+            color: var(--primary-color);
+        }
+        
+        /* Responsive adjustments */
+        @media (max-width: 600px) {
+            .container {
+                border-radius: 0;
+                height: 100%;
+                max-height: 100%;
+                display: flex;
+                flex-direction: column;
+            }
+            
+            .transcript-container {
+                flex: 1;
+                overflow-y: auto;
+            }
+            
+            .transcript-box {
+                max-height: none;
+            }
+            
+            button {
+                flex: 1;
+                justify-content: center;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="app-header">
+            <h1 class="app-title">Medical Translator</h1>
+            <div class="app-icon"><i class="fas fa-heartbeat"></i></div>
+        </div>
+        
+        <div class="language-selection">
+            <div class="language-group">
+                <label class="language-label" for="sourceLanguage">Source Language</label>
+                <select id="sourceLanguage">
+                    <option value="auto">Auto-detect</option>
+                    <option value="en" selected>English</option>
+                    <option value="es">Spanish</option>
+                    <option value="fr">French</option>
+                    <option value="de">German</option>
+                    <option value="zh-cn">Chinese</option>
+                    <option value="ja">Japanese</option>
+                    <option value="ko">Korean</option>
+                    <option value="ar">Arabic</option>
+                    <option value="hi">Hindi</option>
+                    <option value="pt">Portuguese</option>
+                    <option value="ru">Russian</option>
+                </select>
+            </div>
+            
+            <div class="language-group">
+                <label class="language-label" for="targetLanguage">Target Language</label>
+                <select id="targetLanguage">
+                    <option value="en">English</option>
+                    <option value="es" selected>Spanish</option>
+                    <option value="fr">French</option>
+                    <option value="de">German</option>
+                    <option value="zh-cn">Chinese</option>
+                    <option value="ja">Japanese</option>
+                    <option value="ko">Korean</option>
+                    <option value="ar">Arabic</option>
+                    <option value="hi">Hindi</option>
+                    <option value="pt">Portuguese</option>
+                    <option value="ru">Russian</option>
+                </select>
+            </div>
+        </div>
+        
+        <div class="transcript-container">
+            <div class="transcript-box">
+                <h3>
+                    Original Transcript
+                    <button class="copy-btn" id="copyOriginal" title="Copy to clipboard">
+                        <i class="fas fa-copy"></i>
+                    </button>
+                </h3>
+                <div id="originalTranscript" class="transcript-text"></div>
+            </div>
+            
+            <div class="transcript-box">
+                <h3>
+                    Translated Text
+                    <button class="copy-btn" id="copyTranslation" title="Copy to clipboard">
+                        <i class="fas fa-copy"></i>
+                    </button>
+                </h3>
+                <div id="translatedText" class="transcript-text"></div>
+            </div>
+        </div>
+        
+        <div class="status-container">
+            <div class="spinner" id="spinner"></div>
+            <div id="statusMessage" class="status-message"></div>
+        </div>
+        
+        <div class="actions">
+            <button id="startBtn" class="record">
+                <i class="fas fa-microphone"></i> Start Recording
+            </button>
+            <button id="stopBtn" class="stop" disabled>
+                <i class="fas fa-stop"></i> Stop
+            </button>
+            <button id="speakBtn" class="speak" disabled>
+                <i class="fas fa-volume-up"></i> Speak
+            </button>
+        </div>
+    </div>
+
+    <script>
+        let mediaRecorder;
+        let audioChunks = [];
+        let audioPlayer;
+        
+        document.addEventListener('DOMContentLoaded', function() {
+            const startBtn = document.getElementById('startBtn');
+            const stopBtn = document.getElementById('stopBtn');
+            const speakBtn = document.getElementById('speakBtn');
+            const statusMessage = document.getElementById('statusMessage');
+            const originalTranscript = document.getElementById('originalTranscript');
+            const translatedText = document.getElementById('translatedText');
+            const spinner = document.getElementById('spinner');
+            const copyOriginal = document.getElementById('copyOriginal');
+            const copyTranslation = document.getElementById('copyTranslation');
+            
+            // Create audio player programmatically
+            audioPlayer = new Audio();
+            audioPlayer.addEventListener('ended', function() {
+                speakBtn.innerHTML = '<i class="fas fa-volume-up"></i> Speak';
+                speakBtn.classList.remove('playing');
+            });
+            
+            startBtn.addEventListener('click', startRecording);
+            stopBtn.addEventListener('click', stopRecording);
+            speakBtn.addEventListener('click', toggleSpeech);
+            
+            copyOriginal.addEventListener('click', () => copyToClipboard(originalTranscript.textContent));
+            copyTranslation.addEventListener('click', () => copyToClipboard(translatedText.textContent));
+            
+            async function startRecording() {
+                try {
+                    resetUI();
+                    setStatus('Requesting microphone access...');
+                    
+                    const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                    mediaRecorder = new MediaRecorder(stream);
+                    
+                    mediaRecorder.ondataavailable = (event) => {
+                        audioChunks.push(event.data);
+                    };
+                    
+                    mediaRecorder.onstart = () => {
+                        audioChunks = [];
+                        startBtn.disabled = true;
+                        stopBtn.disabled = false;
+                        setStatus('Recording... Speak now');
+                    };
+                    
+                    mediaRecorder.onstop = async () => {
+                        setStatus('Processing audio...');
+                        showSpinner(true);
+                        startBtn.disabled = false;
+                        stopBtn.disabled = true;
+                        
+                        const audioBlob = new Blob(audioChunks, { type: 'audio/webm' });
+                        await processAudio(audioBlob);
+                        
+                        // Stop the microphone stream
+                        stream.getTracks().forEach(track => track.stop());
+                    };
+                    
+                    mediaRecorder.start();
+                } catch (error) {
+                    console.error('Error starting recording:', error);
+                    setStatus(`Error: ${error.message}`);
+                    startBtn.disabled = false;
+                    stopBtn.disabled = true;
+                }
+            }
+            
+            function stopRecording() {
+                if (mediaRecorder && mediaRecorder.state !== 'inactive') {
+                    mediaRecorder.stop();
+                }
+            }
+            
+            async function processAudio(audioBlob) {
+                try {
+                    const formData = new FormData();
+                    formData.append('audio', audioBlob, 'audio.webm');
+                    formData.append('source_language', document.getElementById('sourceLanguage').value);
+                    formData.append('target_language', document.getElementById('targetLanguage').value);
+                    
+                    const response = await fetch('/process_audio', {
+                        method: 'POST',
+                        body: formData
+                    });
+                    
+                    const result = await response.json();
+                    
+                    if (result.error) {
+                        throw new Error(result.error);
+                    }
+                    
+                    // Update UI with results
+                    originalTranscript.textContent = result.transcript || '';
+                    translatedText.textContent = result.translated_text || '';
+                    
+                    if (result.audio_path) {
+                        audioPlayer.src = result.audio_path;
+                        speakBtn.disabled = false;
+                    }
+                    
+                    setStatus('Processing complete');
+                } catch (error) {
+                    console.error('Error processing audio:', error);
+                    setStatus(`Error: ${error.message}`);
+                } finally {
+                    showSpinner(false);
+                }
+            }
+            
+            function toggleSpeech() {
+                if (audioPlayer.paused) {
+                    audioPlayer.play();
+                    speakBtn.innerHTML = '<i class="fas fa-pause"></i> Pause';
+                    speakBtn.classList.add('playing');
+                } else {
+                    audioPlayer.pause();
+                    speakBtn.innerHTML = '<i class="fas fa-volume-up"></i> Speak';
+                    speakBtn.classList.remove('playing');
+                }
+            }
+            
+            function resetUI() {
+                originalTranscript.textContent = '';
+                translatedText.textContent = '';
+                speakBtn.disabled = true;
+                speakBtn.innerHTML = '<i class="fas fa-volume-up"></i> Speak';
+                speakBtn.classList.remove('playing');
+            }
+            
+            function setStatus(message) {
+                statusMessage.textContent = message;
+            }
+            
+            function showSpinner(show) {
+                spinner.style.display = show ? 'block' : 'none';
+            }
+            
+            function copyToClipboard(text) {
+                navigator.clipboard.writeText(text)
+                    .then(() => {
+                        setStatus('Copied to clipboard');
+                        setTimeout(() => setStatus(''), 2000);
+                    })
+                    .catch(err => {
+                        console.error('Error copying text: ', err);
+                        setStatus('Failed to copy text');
+                    });
+            }
+        });
+    </script>
+</body>
+</html>
